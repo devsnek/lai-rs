@@ -61,6 +61,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .flag("-fno-builtin")
         .flag("-nostdlib")
         .flag("-ffreestanding")
+        .flag("-fpic")
         .compile("lai");
 
     println!("cargo:rerun-if-changed=src/wrapper.h");

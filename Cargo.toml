@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 log = "0.4.16"
 bitflags = "2.4.0"
+spin = "0.9"
 
 [build-dependencies]
 cc = "1.0.73"

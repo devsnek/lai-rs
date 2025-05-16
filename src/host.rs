@@ -1,20 +1,15 @@
-use core::alloc::Layout;
-
-use alloc::sync::Arc;
-
 use super::helper::*;
 use crate::sys;
-use core::ffi::{c_char, c_int, c_void};
+use core::{
+    alloc::Layout,
+    ffi::{c_char, c_int, c_void},
+};
+use spin::Once;
 
-static mut LAI_HOST: Option<Arc<dyn Host>> = None;
+static LAI_HOST: Once<&'static dyn Host> = Once::new();
 
-fn get_laihost() -> Arc<dyn Host> {
-    unsafe {
-        LAI_HOST
-            .as_ref()
-            .expect("lai: host not initialized")
-            .clone()
-    }
+fn get_laihost() -> &'static dyn Host {
+    *LAI_HOST.get().expect("lai: host not initialized")
 }
 
 #[derive(Debug)]
@@ -23,7 +18,7 @@ pub enum LogLevel {
     Warn,
 }
 
-pub trait Host {
+pub trait Host: Send + Sync {
     fn scan(&self, _signature: &str, _index: usize) -> *mut u8;
     fn sleep(&self, _ms: u64);
 
@@ -75,11 +70,8 @@ pub trait Host {
     }
 }
 
-pub fn init(host: Arc<dyn Host>) {
-    unsafe {
-        assert!(LAI_HOST.is_none());
-        LAI_HOST = Some(host);
-    }
+pub fn init(host: &'static dyn Host) {
+    LAI_HOST.call_once(|| host);
 }
 
 #[no_mangle]
